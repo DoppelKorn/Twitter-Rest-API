@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sören's Twitter Seite</title>
+
+    <style type="text/css">
+
+        .flex-containerCol {
+            display: flex;
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .feed {
+            margin: 10px;
+            font-size: 15px;
+            box-shadow: 12px 12px 19px silver;
+            padding-left: 10px;
+        }
+
+        .header {
+            /*README BackgroundColors - Start*/
+            background: rgb(0, 212, 255);
+            background: linear-gradient(90deg, rgba(0, 212, 255, 1) 0%, rgba(31, 59, 156, 1) 48%, rgba(61, 37, 195, 1) 100%);
+            /*README BackgroundColors - End*/
+            border-radius: 40px;
+            text-align: center;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-size: 20px;
+            font-weight: bold;
+            font-style: italic;
+            letter-spacing: .1em;
+            color: white;
+            text-shadow: 0 0 5px white,
+            0 0 10px white,
+            0 0 20px black,
+            0 0 40px blue,
+            0 0 60px blue,
+            0 0 90px blue,
+            0 0 120px blue,
+            0 0 160px blue;
+        }
+
+        .article {
+            padding-left: 50px;
+            padding-right: 50px;
+        }
+
+        .footer {
+            /*README BackgroundColors - Start*/
+            background: rgb(0, 212, 255);
+            background: linear-gradient(90deg, rgba(0, 212, 255, 1) 0%, rgba(31, 59, 156, 1) 48%, rgba(61, 37, 195, 1) 100%);
+            /*README BackgroundColors - End*/
+            border-top: solid 2px black;
+            font-size: 12px;
+            text-align: end;
+            margin-top: 20px;
+            clear: both;
+            border-radius: 40px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .search {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .glow, .feed {
+            word-wrap: break-word;
+            width: 150px;
+            border: none;
+            outline: none;
+            color: #fff;
+            background: #111;
+            position: relative;
+            z-index: 0;
+            border-radius: 10px;
+        }
+
+        .ListElement {
+            cursor: pointer;
+        }
+
+        #body {
+            background-color: #222222;
+        }
+
+        #feed-flex-container-wrap {
+            display: flex;
+            justify-content: start;
+            margin-top: 10px;
+            flex-flow: row wrap;
+        }
+
+        #description {
+            text-align: center;
+            color: white;
+        }
+
+        #savedRequest {
+            float: right;
+        }
+
+        #search-Button, #clearList, #saveSearch {
+            height: 25px;
+        }
+
+        #savedRequestList {
+            list-style-type: circle;
+        }
+
+        #editHeader {
+            text-align: center;
+            margin: 6px;
+        }
+
+        @font-face {
+            font-family: neon;
+            src: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/707108/neon.ttf);
+        }
+
+        /* README  Hover Glow Effect - Start*/
+        .glow:before {
+            content: '';
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            animation: glowing 20s linear infinite;
+            opacity: 0;
+            transition: opacity .3s ease-in-out;
+            border-radius: 10px;
+        }
+
+
+        .glow:active {
+            color: #000
+        }
+
+
+        .glow:active:after {
+            background: transparent;
+        }
+
+
+        .glow:hover:before {
+            opacity: 1;
+        }
+
+
+        .glow:after {
+            z-index: -1;
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            left: 0;
+            top: 0;
+            border-radius: 10px;
+        }
+
+
+        @keyframes glowing {
+            0% {
+                background-position: 0 0;
+            }
+            50% {
+                background-position: 400% 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+        /* README  Hover Glow Effect - End*/
+    </style>
+
+    <script type="application/javascript">
+
+        document.addEventListener("DOMContentLoaded", () => {
+            let search;
+            document.getElementById("clearList").addEventListener("click", clearList);
+            document.getElementById("saveSearch").addEventListener("click", save_Request);
+            document.getElementById("search-Button").addEventListener("click", request);
+            document.getElementById("editCheckBox").addEventListener("click", selectEditMode);
+            loadStartData();
+            let editMode = false;
+
+            //lädt beim Aufruf der Seite alle Gespeicherten Suchebegriffe vom Server und zeigt diese in einer List
+            function loadStartData() {
+                let loadList = new XMLHttpRequest();
+
+                loadList.addEventListener("load", (event) => {
+                    const data = JSON.parse(event.currentTarget.responseText);
+
+                    if (data === null) {
+                        return console.log("Keine gespeicherten Daten");
+                    } else {
+                        //README Split String with comma in javascript - Start
+                        let List = data.split(',');
+                        //README Split String with comma in javascript - End
+                        let savedList = document.getElementById("savedRequestList");
+                        for (let i = 0; i < List.length - 1; i++) {
+                            let newListItem = document.createElement('li');
+                            newListItem.className = "ListElement";
+                            newListItem.innerText = List[i];
+                            savedList.appendChild(newListItem);
+                            newListItem.addEventListener("click", function () {
+                                if (editMode === false) {
+                                    newListItem.contentEditable = "false";
+                                    requestList(newListItem.innerText);
+                                } else {
+                                    newListItem.contentEditable = "true";
+                                }
+                            });
+                        }
+                    }
+                });
+                loadList.open("GET", "http://localhost:3000/loadList");
+                loadList.send();
+            }
+
+            //erstellt mit den Übergebenen Daten die Tweets in dem Feed
+            function generateFeed(data) {
+                const feed = document.getElementById('feed-flex-container-wrap');
+
+                let searchInput = document.querySelector("#searchInput").value;
+                document.getElementById("searchInput").value = "";
+                let feedHeader = document.createElement("h2");
+                feedHeader.className = "feedHeader";
+
+                feedHeader.style.textAlign = "justify";
+                feedHeader.style.fontSize = "40px";
+                feedHeader.style.textShadow = "1px 2px grey";
+                feedHeader.style.textDecorationLine = "underline";
+                feedHeader.style.margin = "130px";
+                feedHeader.style.color = "white";
+                feedHeader.innerText = searchInput;
+                feed.appendChild(feedHeader);
+
+                for (let i = 0; i < data.length; i++) {
+                    let TweetTime = data[i].created_at;
+
+                    let newFeedDiv = document.createElement('div');
+                    newFeedDiv.className = 'feed';
+                    let newUser = document.createElement("h4");
+                    let User = document.createTextNode("Username:  " + data[i].username);
+                    let newP = document.createElement('p');
+                    let text = document.createTextNode(data[i].text);
+                    let newTime = document.createElement("h4");
+                    let time = document.createTextNode("~ " + TweetTime.slice(11, 19) + " | " + "Lang: " + data[i].lang);
+
+                    feed.appendChild(newFeedDiv);
+                    newFeedDiv.appendChild(newUser);
+                    newFeedDiv.appendChild(newTime);
+                    newFeedDiv.appendChild(newP);
+
+                    newP.appendChild(text);
+                    newUser.appendChild(User);
+                    newTime.appendChild(time);
+                }
+            }
+
+            //löscht alle bisher erzeugten Tweets
+            function clearList() {
+                const feed = document.getElementsByClassName("feed");
+                const header = document.getElementsByClassName("feedHeader");
+                while (header.length > 0) {
+                    header[0].parentNode.removeChild(header[0]); //README Removing elements by class name
+                }
+                while (feed.length > 0) {
+                    feed[0].parentNode.removeChild(feed[0]); //README Removing elements by class name
+                }
+            }
+
+            //Führt eine Suchanfrage durch, wenn der Benutzer auf suchen drückt
+            function request() {
+                search = document.querySelector("#searchInput").value;
+
+                const requestPost = new XMLHttpRequest();
+                const requestGet = new XMLHttpRequest();
+
+                if (search === "") {
+                    alert("bitte Suchfeld ausfüllen")
+                } else if (search !== "") {
+                    requestPost.open('POST', "http://localhost:3000/search");
+                    requestPost.send(search);
+
+                    requestPost.addEventListener("load", () => {
+                        requestGet.open('GET', "http://localhost:3000/search");
+                        requestGet.send();
+                    });
+
+                    requestGet.addEventListener("load", (event) => {
+                        const data = JSON.parse(event.currentTarget.responseText);
+
+                        if (data === null) {
+                            return "Error";
+                        } else {
+                            generateFeed(data);
+                        }
+                    });
+                }
+            }
+
+            //Wenn der Suchbegriff gespeichert werden soll, wird eine Post request an den Server gesendet. Es wird der Wert übertragen, welcher gerqde in der Suchleiste steht
+            function save_Request() {
+                search = document.querySelector("#searchInput").value;
+                if (search === "") {
+                    alert("bitte Suchfeld ausfüllen")
+                } else if (search !== "") {
+                    var saveRequestPost = new XMLHttpRequest();
+                    saveRequestPost.open("POST", "http://localhost:3000/saveRequest");
+                    saveRequestPost.send(search);
+
+                    let savedList = document.getElementById("savedRequestList");
+                    let newListIdem = document.createElement('li');
+                    newListIdem.className = "ListElement";
+                    newListIdem.innerText = search;
+                    savedList.appendChild(newListIdem);
+                    newListIdem.addEventListener("click", function () {
+                        if (editMode === false) {
+                            newListIdem.contentEditable = "false";
+                            requestList(newListIdem.innerText);
+                        } else {
+                            newListIdem.contentEditable = "true";
+
+                        }
+                    });
+                }
+            }
+
+            //Wenn der Nutzer ein Item aus der Liste auswählt, wird der Entsprechende Text des Listeneintrages an die Funktion übergebn und führt einen request durch
+            function requestList(ListItem) {
+                const requestPost = new XMLHttpRequest();
+                const requestGet = new XMLHttpRequest();
+
+                requestPost.open('POST', "http://localhost:3000/search");
+                requestPost.send(ListItem);
+
+                requestPost.addEventListener("load", () => {
+                    requestGet.open('GET', "http://localhost:3000/search");
+                    requestGet.send();
+                });
+
+                requestGet.addEventListener("load", (event) => {
+                    const data = JSON.parse(event.currentTarget.responseText);
+                    if (data === null) {
+                        return "Error";
+                    } else {
+                        generateFeed(data);
+                    }
+                });
+            }
+
+            //Ändert zwischen Editier-Modus und Nicht-Editier-Modus
+            function selectEditMode() {
+                editMode = editMode === false;
+            }
+        });
+
+    </script>
+</head>
+
+<body id="body">
+<div class="flex-containerCol">
+    <header class="header">
+        <h1>
+            Sörens Twitter Wall
+        </h1>
+    </header><!-- header -->
+
+    <article class="article">
+        <br/>
+        <p id="description">
+            Diese Seite wurde auf Basis der Vorlesung WebProgrammierung erstellt. Auf dieser Seite ist es möglich Tweets
+            über die Twitter-API zu suchen.
+        </p>
+        <br/>
+        <hr/>
+        <br/>
+
+        <div class="glow" id="savedRequest">
+            <ul id="savedRequestList">
+                <h4 style="text-decoration: underline;">Gespeicherte Suchbegriffe:</h4>
+            </ul>
+            <h4 id="editHeader">Edit<label><input id="editCheckBox" type="checkbox"></label><img
+                    src="https://img.icons8.com/plasticine/2x/ask-question.png"
+                    title="Wenn `Edit` akitv ist: klicke auf einen Eintrag um ihn zu bearbeiten " width="30px"
+                    height="30px"></h4>
+        </div>
+        <div id="feed-flex-container-wrap"><!--Hier werden die Tweets angezeigt-->
+        </div> <!-- feed-flex-container-wrap-->
+    </article><!--article-->
+
+    <div class="search">
+        <button class="glow" type="button" id="clearList">Liste leeren</button>
+        <label for="searchInput" style="color: white">Suchbegriff: </label><input type="text" name="input"
+                                                                                  id="searchInput">
+        <button class="glow" type="button" id="search-Button">Suchen</button>
+        <button class="glow" type="button" id="saveSearch">Suchbegriff speichern</button>
+    </div><!-- search-->
+    <br>
+    <a style="text-align: center" href="#">Zum Seitenanfang</a>
+    <footer class="footer">
+        <p>Sören Prieß, Nr:670266, soeren.priess@stud.hs-flensburg.de</p>
+    </footer>
+
+</div> <!-- flex-containerCol-->
+</body>
+</html>

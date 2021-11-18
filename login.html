@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<style>
+    input[type=text], input[type=password] {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    .login {
+        margin: 30px;
+    }
+
+    .createNewAcc {
+        text-decoration: underline;
+        text-decoration-color: #3399ff;
+        color: #3399ff;
+    }
+
+    .loginButton {
+        width: 100px;
+        margin: 5px 40% 5px 5px;
+    }
+
+    #loginWindow {
+        border-radius: 40px;
+        border-style: outset;
+        border-color: #0000ff;
+        box-shadow: 5px 10px 18px blue;
+        width: 500px;
+        height: 325px;
+        margin: 0 auto;
+        /* README  BackgroundColors - Start*/
+        background: rgb(2, 0, 36);
+        background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(0, 212, 255, 1) 0%, rgba(9, 9, 121, 1) 100%);
+        /* README  BackgroundColors - End */
+    }
+
+    #body {
+        /* README  BackgroundColors - Start*/
+        background: rgb(0, 198, 255);
+        background: linear-gradient(90deg, rgba(0, 198, 255, 1) 0%, rgba(15, 15, 78, 1) 50%, rgba(0, 0, 255, 1) 100%);
+        /* README  BackgroundColors - End*/
+    }
+
+    #newAccWindow {
+        visibility: hidden;
+        border-radius: 40px;
+        margin: 0 auto;
+        border-style: outset;
+        border-color: #0000ff;
+        box-shadow: 5px 10px 18px blue;
+        width: 500px;
+        height: 400px;
+        /* README  BackgroundColors - Start*/
+        background: rgb(2, 0, 36);
+        background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(0, 212, 255, 1) 0%, rgba(9, 9, 121, 1) 100%);
+        /* README  BackgroundColors - End */
+    }
+
+    #twitterlogo {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #pwError {
+        visibility: hidden;
+        color: #ff0000;
+    }
+
+    #LoginError {
+        visibility: hidden;
+        color: #ff0000;
+    }
+</style>
+<script>
+    //Wenn der User auf "create new Account" klickt, wird ein Fenster zur registrierung geöffnet
+    function showWindow() {
+        var loginWindow = document.getElementById("loginWindow");
+        loginWindow.remove();
+        var newAccount = document.getElementById("newAccWindow");
+        newAccount.style.visibility = "visible";
+    }
+
+    //Wird ausgeführt, wenn der User sich anmelden will
+    function login() {
+        requestLogin();
+    }
+
+    //Wird ausgeführt, wenn der User sich registrieren will, überprüft ob die eingegebenen Daten dem Muster entsprechen
+    function register() {
+        var pw = document.getElementById("pwRegister").value;
+        var pwConfirm = document.getElementById("pwConfirmRegister").value;
+        var email = document.getElementById("mailRegister").value;
+
+        if (pw === pwConfirm && validateEmail(email)) {
+            requestRegister();
+        } else if (!validateEmail(email)) {
+            document.getElementById("pwError").innerText = "Mail entspricht dem Muster!";
+            document.getElementById("pwError").style.visibility = "visible";
+            document.getElementById("mailRegisterLabel").style.color = "red";
+            document.getElementById("mailRegister").style.borderColor = "red";
+        } else {
+            document.getElementById("pwError").innerText = "Passwörter stimmen nicht überein!";
+            document.getElementById("pwError").style.visibility = "visible";
+            document.getElementById("pwConfirmRegister").style.borderColor = "red";
+            document.getElementById("pwConfirmRegisterLabel").style.color = "red";
+            document.getElementById("pwRegister").style.borderColor = "red";
+            document.getElementById("pwRegisterLabel").style.color = "red";
+        }
+    }
+
+    //überprüft ob die angebene Mail dem Muster einer Mail-Adresse entspricht
+    function validateEmail(email) {
+        /* README  Validate email address - Start */
+        var re = /\S+@\S+\.\S+/;
+        return re.test(email);
+        /* README  Validate email address - End */
+    }
+
+    //sendet eine Anfrage zum einloggen an den Server
+    function requestLogin() {
+        let mail = document.getElementById("mailLogin").value;
+        let password = document.getElementById("pwLogin").value;
+
+        let data = {
+            "userdata": [
+                {"email": mail, "password": password}
+            ]
+        };
+        const request = new XMLHttpRequest();
+
+        request.addEventListener("load", (event) => {
+            const data = JSON.parse(event.currentTarget.responseText);
+            if (data === true) {
+                window.open("index.html");
+                close();
+            } else {
+                document.getElementById("LoginError").style.visibility = "visible";
+                document.getElementById("pwLoginLabel").style.color = "red";
+                document.getElementById("pwLogin").style.borderColor = "red";
+                document.getElementById("mailLoginLabel").style.color = "red";
+                document.getElementById("mailLogin").style.borderColor = "red";
+                console.log("Login fehlgeschlagen");
+            }
+        });
+        request.open("POST", "http://localhost:3000/login", true);
+        request.send(JSON.stringify(data));
+        console.log("Userdaten für Login gesendet...");
+    }
+
+    //sendet eine Anfrage zum registrieren an den Server
+    function requestRegister() {
+        let mail = document.getElementById("mailRegister").value;
+        let password = document.getElementById("pwRegister").value;
+
+        let data = {
+            "userdata": [
+                {"email": mail, "password": password}
+            ]
+        };
+        const request = new XMLHttpRequest();
+        request.addEventListener("load", (event) => {
+            const data = JSON.parse(event.currentTarget.responseText);
+            if (data === true) {
+                window.open("index.html");
+                close();
+            } else {
+                console.log("account bereits vorhanden");
+                document.getElementById("pwError").innerText = "Account bereits vorhaden!";
+                document.getElementById("pwError").style.visibility = "visible";
+                document.getElementById("mailRegister").style.borderColor = "red";
+                document.getElementById("mailRegisterLabel").style.color = "red";
+                document.getElementById("pwConfirmRegister").style.borderColor = "red";
+                document.getElementById("pwConfirmRegisterLabel").style.color = "red";
+                document.getElementById("pwRegister").style.borderColor = "red";
+                document.getElementById("pwRegisterLabel").style.color = "red";
+            }
+        });
+        request.open("POST", "http://localhost:3000/register", true);
+        request.send(JSON.stringify(data));
+        console.log("Userdaten für Registrierung gesendet...")
+    }
+</script>
+<body id="body">
+<img id="twitterlogo" src="twitter.png" width="500px" height="500px">
+
+<div id="loginWindow">
+    <div class="login">
+        <h1>Login</h1>
+        <label id="mailLoginLabel"> E-Mail: </label>
+        <input id="mailLogin" type="text" placeholder="Enter E-Mail" name="uname" required>
+        <br>
+        <label id="pwLoginLabel"> Passwort: </label>
+        <input id="pwLogin" type="password" placeholder="Enter Password" name="password" required>
+        <button class="loginButton" onclick="login()">Login</button>
+        <label class="createNewAcc">or <label onclick="showWindow()" id="createNewAccount">create new
+            Account</label></label>
+        <label id="LoginError">Passwort flasch oder Account nicht vorhanden! Registriere dich jetzt!</label>
+    </div>
+</div>
+
+<div id="newAccWindow">
+    <div class="login">
+        <h1>Create new Account</h1>
+        <label id="mailRegisterLabel"> E-Mail:</label>
+        <input id="mailRegister" type="text" placeholder="Enter E-Mail" name="uname" required>
+        <br>
+        <label id="pwRegisterLabel"> Passwort:</label>
+        <input id="pwRegister" type="password" placeholder="Enter Password" name="password" required>
+        <label id="pwConfirmRegisterLabel"> Bestätige Passwort:</label>
+        <input id="pwConfirmRegister" type="password" placeholder="Enter Password" name="password" required>
+        <button onclick="register()" class="loginButton">Register</button>
+        <br>
+        <label id="pwError"></label>
+    </div>
+</div>
+</body>
+</html>
